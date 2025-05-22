@@ -65,7 +65,6 @@ Using only positional and time-series data, cluster or classify key sequences. Y
   - Your code (notebooks, scripts, or modules)
   - Short markdown or text file explaining your process & insight
 - Optional: Add a few comments in your code to explain your thinking
-- Solo or teams of 2 are welcome
 
 ---
 
@@ -74,4 +73,4 @@ Using only positional and time-series data, cluster or classify key sequences. Y
 We’re looking for creativity, technical skill, and real basketball intuition.  
 Feel free to explore, experiment, and show us your perspective.
 
-Questions? Reach out to us during the hackathon window.
+Questions? Reach out to us!
