@@ -4,6 +4,18 @@ Welcome to the recruiting challenge for our Basketball Consulting Project!
 
 ---
 
+## 🧠 Your Challenge
+
+Choose one of two tracks — or attempt both:
+
+### 1. 🔎 Visual Tracking (Open-ended)
+Reconstruct the 30 second clip [DukeAuburn.mp4] using code — visualize player and ball movement, generate insights, or recreate possession logic. Add your own spin: shot quality, spacing metrics, or player roles.
+
+### 2. 📊 Clustering & Pattern Recognition
+Using only positional and time-series data, cluster or classify key sequences. You might identify defensive formations, pick-and-roll actions, or off-ball movement types.
+
+---
+
 ## 📂 Data Summary: `RaptorsVHornets.json`
 
 This file contains high-resolution SportVU player and ball tracking data from an NBA game between the **Charlotte Hornets** and **Toronto Raptors** on **January 1, 2016**. We’ve clipped a ~30-second segment for this challenge (resembling a typical NCAA half-court possession), which you’ll use to build your solution.
@@ -44,18 +56,6 @@ Each `moment` snapshot follows this structure:
 - `player_id`: Matches the player on the roster
 - `x`, `y`: Player or ball position (in feet)
 - `z`: Height (used only for the ball)
-
----
-
-## 🧠 Your Challenge
-
-Choose one of two tracks — or attempt both:
-
-### 1. 🔎 Visual Tracking (Open-ended)
-Reconstruct the play using code — visualize player and ball movement, generate insights, or recreate possession logic. Add your own spin: shot quality, spacing metrics, or player roles.
-
-### 2. 📊 Clustering & Pattern Recognition
-Using only positional and time-series data, cluster or classify key sequences. You might identify defensive formations, pick-and-roll actions, or off-ball movement types.
 
 ---
 
