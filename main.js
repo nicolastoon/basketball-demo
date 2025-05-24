@@ -14,7 +14,15 @@ const svg = d3.select('#animation')
     .append('svg')
     .attr('id', 'court')
     .attr('width', 1000)
-    .attr('height', 550)
+    .attr('height', 550);
+
+// add thin border around svg
+svg.append('rect')
+    .attr('fill', 'crimson')
+    .attr('width', '100%')
+    .attr('height', '100%')
+    .attr('stroke-width', 1)
+    .attr('stroke', 'black')
 
 function placeCourtLines() {
     const x_offset = 30
@@ -29,8 +37,8 @@ function placeCourtLines() {
         .attr('width', courtWidth)
         .attr('height', courtHeight)
         .attr('stroke', 'black')
-        .attr('stroke-width', 2)
-        .attr('fill', 'none');
+        .attr('stroke-width', 4)
+        .attr('fill', 'tan');
 
     // Half court line
     svg.append('line')
@@ -39,7 +47,7 @@ function placeCourtLines() {
         .attr('y1', y_offset)
         .attr('y2', courtHeight + y_offset)
         .attr('stroke', 'black')
-        .attr('stroke-width', 2);
+        .attr('stroke-width', 1);
 
     // Center circle
     svg.append('circle')
@@ -47,19 +55,26 @@ function placeCourtLines() {
         .attr('cx', courtWidth / 2 + x_offset)
         .attr('cy', courtHeight / 2 + y_offset)
         .attr('stroke', 'black')
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 1)
         .attr('fill', 'none');
 
+    svg.append('image')
+        .attr('href', 'img/raptors-logo.png')
+        .attr('width', 300)
+        .attr('height', 300)
+        .attr('x', courtWidth / 2 + x_offset- 150)
+        .attr('y', courtHeight / 2 + y_offset - 150);
+
     // Paint (keys)
-    [0, courtWidth - 190].forEach(x => {
+    [2, courtWidth - 192].forEach(x => {
         svg.append('rect')
             .attr('x', x + x_offset)
-            .attr('y', (courtHeight - 140) / 2 + y_offset)
+            .attr('y', (courtHeight - 160) / 2 + y_offset)
             .attr('width', 190)
-            .attr('height', 140)
+            .attr('height', 160)
             .attr('stroke', 'black')
-            .attr('stroke-width', 2)
-            .attr('fill', 'red');
+            .attr('stroke-width', 1)
+            .attr('fill', 'crimson');
     });
 
     // Free throw circles
@@ -69,7 +84,7 @@ function placeCourtLines() {
             .attr('cx', cx + x_offset)
             .attr('cy', courtHeight / 2 + y_offset)
             .attr('stroke', 'black')
-            .attr('stroke-width', 2)
+            .attr('stroke-width', 1)
             .attr('fill', 'none');
     });
 
@@ -81,7 +96,7 @@ function placeCourtLines() {
             .attr('y1', (courtHeight / 2 - 30) + y_offset)
             .attr('y2', (courtHeight / 2 + 30) + y_offset)
             .attr('stroke', 'black')
-            .attr('stroke-width', 4);
+            .attr('stroke-width', 3);
     });
 
     // Hoops
@@ -91,23 +106,23 @@ function placeCourtLines() {
             .attr('cx', x + x_offset)
             .attr('cy', courtHeight / 2 + y_offset)
             .attr('stroke', 'orange')
-            .attr('stroke-width', 2)
+            .attr('stroke-width', 1.5)
             .attr('fill', 'none');
     });
 
     // Three-point arcs
-    [47.5, 892.5].forEach(cx => {
-        svg.append('path')
-            .attr('d', d3.arc()
-                .innerRadius(0)
-                .outerRadius(239)
-                .startAngle(cx < courtWidth / 2 ? 0 : -Math.PI)
-                .endAngle(cx < courtWidth / 2 ? Math.PI : 0)
-            ()).attr('transform', `translate(${cx + x_offset}, ${courtHeight / 2 + y_offset})`)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 2)
-            .attr('fill', 'none');
-    });
+    function drawArcOnly(cx, cy, r, startAngle, endAngle, steps = 100) {
+    const arcPoints = d3.range(startAngle, endAngle, (endAngle - startAngle) / steps)
+        .map(a => [cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+
+    svg.append("path")
+        .attr("d", d3.line()(arcPoints))
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+    }
+    drawArcOnly(47.5 + x_offset, courtHeight / 2 + y_offset, 239, -2.99 * Math.PI / 8, 3.05 * Math.PI / 8);
+    drawArcOnly(892.5 + x_offset, courtHeight / 2 + y_offset, 239, 5.01 * Math.PI / 8, 11.05 * Math.PI / 8);
 
     // three-point corners
     [0, 800].forEach(x => {
@@ -119,48 +134,108 @@ function placeCourtLines() {
                 .attr('y1', y + y_offset)
                 .attr('y2', y + y_offset)
                 .attr('stroke', 'black')
-                .attr('stroke-width', 2);
+                .attr('stroke-width', 1);
         });
     });
 }
 
-function animateBall() {
-    const line = d3.line()
-        .x(d => d.x * 10)
-        .y(d => d.y * 10)
-        .curve(d3.curveLinear); // or use curveBasis for smoothing
-
-    // Flatten all positions into a single array
-    const positions = events.flatMap(d => d.moments.map(p => ({
-        x: p[5][0][2],
-        y: p[5][0][3]
-    })));
-
-    const path = svg.append("path")
-        .attr("d", line(positions))
-        .attr("fill", "none");
-
-    const ball = svg.append('circle')
-        .attr('id', 'ball')
-        .attr('r', 4)
-        .attr('fill', 'orange')
-
-    const totalLength = path.node().getTotalLength();
-
-    ball.transition()
-        .duration(7500000)
-        .ease(d3.easeLinear)
-        .tween("pathTween", function() {
-                return function(t) {
-                const p = path.node().getPointAtLength(t * totalLength);
-                ball.attr("transform", `translate(${p.x}, ${p.y})`);
-                };
-        });
-}
-
-function animatePlayers() {
-
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 placeCourtLines();
-animateBall();
+
+const clock = d3.select('#game-clock')
+clock.append('div')
+    .attr('id', 'qtr')
+    .text('Q1')
+clock.append('div')
+    .attr('id', 'game-time')
+    .text('12:00')
+clock.append('div')
+    .attr('id', 'shot-clock')
+    .text('24')
+
+let eventIndex = 0;
+let momentIndex = 0;
+
+let playerXY = []
+const n_players = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+n_players.forEach((n) => {
+    playerXY[n] = {teamId: null, x: 0, y: 0};
+});
+const players = svg.append('g')
+    .attr('id', 'players');
+players.selectAll('rect')
+    .data(playerXY)
+    .enter()
+    .append('rect')
+    .attr('width', 10)
+    .attr('height', 30)
+    .attr('x', (d) => d['x'])
+    .attr('y', (d) => d['y'])
+    .attr('stroke', 'black')
+    .attr('stroke-width', 1)
+    .attr('fill', 'gray');
+
+const ball = svg.append('circle')
+    .attr('id', 'ball')
+    .attr('r', 4)
+    .attr('stroke', 'black')
+    .attr('stroke-width', 2)
+    .attr('fill', 'orange');
+
+const interval = setInterval(() => {
+    const event = events[eventIndex];
+    const moment = event.moments[momentIndex];
+    const raptorsId = event['home']['teamid'];
+
+    if (!moment) {
+        eventIndex++;
+        momentIndex = 0;
+
+        if (eventIndex >= events.length) {
+            clearInterval(interval); // end of data
+            return;
+        }
+
+        return;
+    }
+
+    // Extract info from current moment
+    const qtr = moment[0];
+    const gameClock = formatTime(moment[2]);
+    const shotClock = Math.floor(moment[3]);
+    const ballX = moment[5][0][2] * 10;
+    const ballY = moment[5][0][3] * 10;
+    n_players.forEach((n) => {
+        playerXY[n]['teamId'] = moment[5][n + 1][0];
+        playerXY[n]['x'] = moment[5][n + 1][2] * 10;
+        playerXY[n]['y'] = moment[5][n + 1][3] * 10;
+    });
+
+    // debugger;
+    
+    players.selectAll('rect')
+        .data(playerXY)
+        .transition()
+        .duration(40)
+        .attr('fill', (d) => d['teamId'] === raptorsId ? 'darkred' : 'steelblue')
+        .attr('x', (d) => d['x'])
+        .attr('y', (d) => d['y']);
+
+    // Move the ball
+    ball.transition()
+        .duration(40)
+        .attr('cx', ballX)
+        .attr('cy', ballY);
+
+    // Update clock displays
+    d3.select('#qtr').text(qtr);
+    d3.select('#game-time').text(gameClock);
+    d3.select('#shot-clock').text(shotClock);
+
+    momentIndex++;
+}, 40);
