@@ -18,7 +18,7 @@ Using only positional and time-series data, cluster or classify key sequences. Y
 
 ## 📂 Data Summary: `RaptorsVHornets.json`
 
-This file contains high-resolution SportVU player and ball tracking data from an NBA game between the **Charlotte Hornets** and **Toronto Raptors** on **January 1, 2016**. We’ve clipped a ~30-second segment for this challenge (resembling a typical NCAA half-court possession), which you’ll use to build your solution.
+This file contains high-resolution SportVU player and ball tracking data from an NBA game between the **Charlotte Hornets** and **Toronto Raptors** on **January 1, 2016**. We’ve clipped the full game, which you’ll use to build your solution.
 
 The data was recorded at **25 frames per second**, tracking all 10 players and the ball in 3D space throughout each play moment.
 
