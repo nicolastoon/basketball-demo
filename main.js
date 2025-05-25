@@ -8,7 +8,7 @@ async function loadData() {
 
 const data = await loadData();
 console.log(data);
-const events = data.events
+const events = data.events;
 
 const svg = d3.select('#animation')
     .append('svg')
@@ -22,14 +22,23 @@ svg.append('rect')
     .attr('width', '100%')
     .attr('height', '100%')
     .attr('stroke-width', 1)
-    .attr('stroke', 'black')
+    .attr('stroke', 'black');
+
+const x_offset = 30;
+const y_offset = 25;
+const courtWidth = 940;
+const courtHeight = 500;
+
+const raptors = events[0]['home']
+const hornets = events[0]['visitor']
+const playerMap = [...raptors['players'], ...hornets['players']].reduce((obj, p) => {
+    obj[p['playerid']] = p;
+    return obj;
+}, {});
+
+console.log(playerMap);
 
 function placeCourtLines() {
-    const x_offset = 30
-    const y_offset = 25
-    const courtWidth = 940
-    const courtHeight = 500
-
     // Court bounds
     svg.append('rect')
         .attr('x', x_offset)
@@ -115,11 +124,11 @@ function placeCourtLines() {
     const arcPoints = d3.range(startAngle, endAngle, (endAngle - startAngle) / steps)
         .map(a => [cx + r * Math.cos(a), cy + r * Math.sin(a)]);
 
-    svg.append("path")
-        .attr("d", d3.line()(arcPoints))
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-        .attr("fill", "none");
+    svg.append('path')
+        .attr('d', d3.line()(arcPoints))
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1)
+        .attr('fill', 'none');
     }
     drawArcOnly(47.5 + x_offset, courtHeight / 2 + y_offset, 239, -2.99 * Math.PI / 8, 3.05 * Math.PI / 8);
     drawArcOnly(892.5 + x_offset, courtHeight / 2 + y_offset, 239, 5.01 * Math.PI / 8, 11.05 * Math.PI / 8);
@@ -143,7 +152,35 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+function renderTooltip(id) {
+    const opponent = document.getElementById('opponent');
+    const timeSeen = document.getElementById('time-seen');
+
+    if (Object.entries(closestOpponent[id]).every(d => d[1] === 0)) {
+        opponent.textContent = 'None';
+        timeSeen.textContent = formatTime(0);
+    } else {
+        const sortedOpponents = Object.entries(closestOpponent[id]).sort((a, b) => b[1] - a[1]);
+        opponent.textContent = `${playerMap[sortedOpponents[0][0]]['firstname']} ${playerMap[sortedOpponents[0][0]]['lastname']}`;
+        timeSeen.textContent = formatTime(closestOpponent[id][sortedOpponents[0][0]] / 1000);
+    }
 }
+
+function updateTooltip(event) {
+    const tooltip = document.getElementById('player-tooltip');
+    const offset = 15;
+    tooltip.style.left = `${event.clientX}px`;
+    tooltip.style.top = `${event.clientY - tooltip.offsetHeight - offset}px`;
+};
+
+function showTooltip(visible) {
+    const tooltip = document.getElementById('player-tooltip');
+    tooltip.hidden = !visible;
+};
+
+const distance = (x1, y1, x2, y2) => Math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
 
 placeCourtLines();
 
@@ -158,27 +195,86 @@ clock.append('div')
     .attr('id', 'shot-clock')
     .text('24')
 
-let eventIndex = 0;
+const teamBox = {'raptors': raptors, 'hornets': hornets}
+Object.entries(teamBox).forEach((d) => {
+    d3.select(`#${d[0]}-box`)
+        .selectAll('tr.player')
+        .data(d[1]['players'])
+        .enter()
+        .append('tr')
+        .attr('class', 'player')
+        .attr('id', (d) => `player-${d['playerid']}`)
+        .html((d) => 
+            `
+            <td>${d['jersey']}</td>
+            <td id='player-name'>${d['firstname']} ${d['lastname']}</td>
+            <td id='player-mp'>0:00</td>
+            `
+        )
+        .on('mouseover', (event, d) => {
+            renderTooltip(d['playerid']);
+            updateTooltip(event);
+            showTooltip(true);
+        })
+        .on('mousemove', (event) => {
+            updateTooltip(event);
+        })
+        .on('mouseout', () => {
+            showTooltip(false);
+        });
+});
+
+let moments = events.flatMap(d => d.moments);
+moments.sort((a, b) => {
+    if (a[0] !== b[0]) {
+        return a[0] - b[0];
+    } else {
+        return a[1] - b[1];
+    }
+});
+const seen = new Set();
+moments = moments.filter((d) => {
+    if (seen.has(d[1])) {
+        return false;
+    } else {
+        seen.add(d[1]);
+        return true;
+    }
+});
+
+console.log(moments);
+
 let momentIndex = 0;
+const raptorsId = events[0]['home']['teamid'];
 
 let playerXY = []
-const n_players = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+let n_players = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 n_players.forEach((n) => {
-    playerXY[n] = {teamId: null, x: 0, y: 0};
+    playerXY[n] = {teamId: null, playerId: null, x: 0, y: 0};
 });
 const players = svg.append('g')
     .attr('id', 'players');
-players.selectAll('rect')
+const playerGroups = players.selectAll('g')
     .data(playerXY)
     .enter()
-    .append('rect')
-    .attr('width', 10)
-    .attr('height', 30)
-    .attr('x', (d) => d['x'])
-    .attr('y', (d) => d['y'])
+    .append('g');
+
+// Draw rectangles
+playerGroups.append('rect')
+    .attr('width', 20)
+    .attr('height', 20)
     .attr('stroke', 'black')
     .attr('stroke-width', 1)
-    .attr('fill', 'gray');
+    .attr('fill', d => d['teamId'] === raptorsId ? 'white' : 'darkslateblue');
+
+const player_offset = 10;
+
+// Add player ID as text inside rectangle
+playerGroups.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('alignment-baseline', 'middle')
+    .attr('color', (d) => {return d['teamId'] === raptorsId ? 'black' : 'white'})
+    .attr('font-size', 15);
 
 const ball = svg.append('circle')
     .attr('id', 'ball')
@@ -187,55 +283,123 @@ const ball = svg.append('circle')
     .attr('stroke-width', 2)
     .attr('fill', 'orange');
 
-const interval = setInterval(() => {
-    const event = events[eventIndex];
-    const moment = event.moments[momentIndex];
-    const raptorsId = event['home']['teamid'];
+let isRunning = true;
+let speed = 1;
+const speedSlider = document.getElementById('speed-slider');
+const speedLabel = document.getElementById('speed-label');
 
-    if (!moment) {
-        eventIndex++;
-        momentIndex = 0;
+speedSlider.addEventListener('input', () => {
+    speed = parseFloat(speedSlider.value);
+    speedLabel.textContent = `${speed}x`;
+});
 
-        if (eventIndex >= events.length) {
-            clearInterval(interval); // end of data
-            return;
+const playerIds = Object.keys(playerMap);
+
+const playerMP = playerIds.reduce((obj, p) => {
+    obj[p] = 0;
+    return obj;
+}, {});
+const closestOpponent = {}
+
+playerIds.forEach((player) => {
+    closestOpponent[player] = {};
+
+    playerIds.forEach((other) => {
+        if (player !== other) {
+            closestOpponent[player][other] = 0;
         }
+    });
+});
 
-        return;
-    }
+let lastGameClock = null;
 
-    // Extract info from current moment
+function animate() {
+    if (!isRunning || momentIndex >= moments.length) return;
+
+    const moment = moments[momentIndex];
     const qtr = moment[0];
-    const gameClock = formatTime(moment[2]);
+    const gameClock = moment[2];
     const shotClock = Math.floor(moment[3]);
     const ballX = moment[5][0][2] * 10;
     const ballY = moment[5][0][3] * 10;
-    n_players.forEach((n) => {
-        playerXY[n]['teamId'] = moment[5][n + 1][0];
-        playerXY[n]['x'] = moment[5][n + 1][2] * 10;
-        playerXY[n]['y'] = moment[5][n + 1][3] * 10;
-    });
+    const ballZ = moment[5][0][4];
 
-    // debugger;
-    
+    let recordTime = ((lastGameClock !== null) && (lastGameClock !== gameClock));
+
+    if (moment[5][0][0] !== -1) { // if ball tracking doesn't exist for that moment
+        n_players.forEach((n) => {
+            playerXY[n]['teamId'] = moment[5][n][0];
+            playerXY[n]['playerId'] = moment[5][n][1];
+            playerXY[n]['x'] = moment[5][n][2] * 10 + x_offset;
+            playerXY[n]['y'] = moment[5][n][3] * 10 + y_offset - player_offset;
+        });
+    } else {
+        n_players.forEach((n) => {
+            playerXY[n]['teamId'] = moment[5][n + 1][0];
+            playerXY[n]['playerId'] = moment[5][n + 1][1];
+            playerXY[n]['x'] = moment[5][n + 1][2] * 10;
+            playerXY[n]['y'] = moment[5][n + 1][3] * 10;
+        });
+    };
+
     players.selectAll('rect')
         .data(playerXY)
         .transition()
-        .duration(40)
-        .attr('fill', (d) => d['teamId'] === raptorsId ? 'darkred' : 'steelblue')
+        .duration(40 / speed)
+        .attr('fill', (d) => d['teamId'] === raptorsId ? 'white' : 'darkslateblue')
+        .attr('fillText', (d) => d['playerId'])
         .attr('x', (d) => d['x'])
         .attr('y', (d) => d['y']);
 
-    // Move the ball
-    ball.transition()
-        .duration(40)
-        .attr('cx', ballX)
-        .attr('cy', ballY);
+    players.selectAll('text')
+        .data(playerXY)
+        .transition()
+        .duration(40 / speed)
+        .text(d => playerMap[d['playerId']]['jersey'])
+        .attr('x', d => d['x'] + x_offset - 20) // center text
+        .attr('y', d => d['y'] - player_offset + y_offset - 3)
+        .attr('fill', (d) => {return d['teamId'] === raptorsId ? 'black' : 'white'});
 
-    // Update clock displays
-    d3.select('#qtr').text(qtr);
-    d3.select('#game-time').text(gameClock);
+    ball.transition()
+        .duration(40 / speed)
+        .attr('r', ballZ * 0.5 + 2.5)
+        .attr('cx', ballX + x_offset)
+        .attr('cy', ballY + y_offset);
+
+    d3.select('#qtr').text(`Q${qtr}`);
+    d3.select('#game-time').text(formatTime(gameClock));
     d3.select('#shot-clock').text(shotClock);
 
+    if (recordTime) {
+        playerXY.forEach((p) => {
+            const pid = p['playerId'];
+            playerMP[pid] += 40;
+            const tableEntry = d3.select(`#player-${pid}`);
+            tableEntry.select('#player-mp')
+                .text(`${formatTime(playerMP[pid] / 1000)}`);
+            
+            let closestOppo = null;
+            let closestDistance = Infinity;
+            playerXY.forEach((other_p) => {
+                if (p['teamId'] !== other_p['teamId']) {
+                    const d = distance(p['x'], p['y'], other_p['x'], other_p['y']);
+                    if (d < closestDistance) {
+                        closestDistance = d;
+                        closestOppo = other_p['playerId'];
+                    }
+                }
+            });
+            closestOpponent[pid][closestOppo] += 40;
+        });
+    };
+
     momentIndex++;
-}, 40);
+    lastGameClock = gameClock;
+
+    // Schedule the next frame
+    setTimeout(animate, 40 / speed);
+    console.log('i');
+}
+
+// Start animation
+animate();

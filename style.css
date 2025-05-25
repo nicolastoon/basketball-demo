@@ -20,7 +20,79 @@
     color: red;
 }
 
+#playback-speed {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 16px;
+}
+
+#speed-slider {
+    width: 400px;
+}
+
+#player-tooltip {
+    position: fixed;
+    transition-property: opacity, visibility;
+    border: 2px solid black;
+    border-radius: 5px;
+    column-gap: 12px;
+    padding: 12px;
+    background-color: white;
+    opacity: 1;
+}
+
+#player-tooltip[hidden]:not(:hover, :focus-within) { 
+    visibility: hidden;
+}
+
 #animation {
     text-align: center;
     margin: 20px 20px 20px 20px;
+}
+
+#boxes {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+#raptors-box, #hornets-box {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: inherit;
+    min-width: 400px;
+    gap: 4px;
+}
+
+#raptors-box th, #hornets-box th {
+    background-color: lightgray;
+    color: black;
+    padding: 8px;
+    text-align: left;
+    font-weight: normal;
+}
+
+#raptors-box tr.player, #hornets-box tr.player {
+    background-color: ghostwhite;
+    opacity: 0.4;
+}
+
+tr.player:hover {
+  opacity: 1;
+}
+
+#raptors-box tr:nth-child(even) {
+    background-color: #e0b8b879;
+}
+
+#hornets-box tr:nth-child(even) {
+    background-color: #cbebeb79;
+}
+
+#raptors-box td, #hornets-box td {
+    padding: 8px;
 }

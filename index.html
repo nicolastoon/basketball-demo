@@ -11,6 +11,37 @@
     <h1>I hope the project is going well!</h1>
 
     <div id="game-clock"></div>
+
+    <div id="playback-speed">
+        <input type="range" id="speed-slider" min="1" max="10" step="1" value="1" wid>
+        <label for="speed-slider">Speed: <span id="speed-label">1x</span></label>
+    </div>
+
     <div id="animation"></div>
+
+    <div id="boxes">
+        <table id="raptors-box">
+            <tr>
+                <th>Player No.</th>
+                <th>Player Name</th>
+                <th>MP</th>
+            </tr>
+        </table>
+        <table id="hornets-box">
+            <tr>
+                <th>Player No.</th>
+                <th>Player Name</th>
+                <th>MP</th>
+            </tr>
+        </table>
+    </div>
+
+    <dl id="player-tooltip" hidden>
+        <dt>Most Frequently Seen Opponent</dt>
+        <dd id="opponent"></dd>
+
+        <dt>Time Seen</dt>
+        <dd id="time-seen"></dd>
+    </dl>
 </body>
 </html>
