@@ -16,14 +16,6 @@ const svg = d3.select('#animation')
     .attr('width', 1000)
     .attr('height', 550);
 
-// add thin border around svg
-svg.append('rect')
-    .attr('fill', 'crimson')
-    .attr('width', '100%')
-    .attr('height', '100%')
-    .attr('stroke-width', 1)
-    .attr('stroke', 'black');
-
 const x_offset = 30;
 const y_offset = 25;
 const courtWidth = 940;
@@ -38,19 +30,30 @@ const playerMap = [...raptors['players'], ...hornets['players']].reduce((obj, p)
 
 console.log(playerMap);
 
-function placeCourtLines() {
+function placeCourtLines(svg) {
+    // add thin border around svg
+    svg.append('rect')
+        .attr('id', 'svg-border')
+        .attr('fill', 'none')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('stroke-width', 1)
+        .attr('stroke', 'black');
+
     // Court bounds
     svg.append('rect')
+        .attr('id', 'court-bounds')
         .attr('x', x_offset)
         .attr('y', y_offset)
         .attr('width', courtWidth)
         .attr('height', courtHeight)
         .attr('stroke', 'black')
         .attr('stroke-width', 4)
-        .attr('fill', 'tan');
+        .attr('fill', 'none');
 
     // Half court line
     svg.append('line')
+        .attr('id', 'half-court-line')
         .attr('x1', courtWidth / 2 + x_offset)
         .attr('x2', courtWidth / 2 + x_offset)
         .attr('y1', y_offset)
@@ -60,6 +63,7 @@ function placeCourtLines() {
 
     // Center circle
     svg.append('circle')
+        .attr('id', 'center-circle')
         .attr('r', 60)
         .attr('cx', courtWidth / 2 + x_offset)
         .attr('cy', courtHeight / 2 + y_offset)
@@ -67,23 +71,17 @@ function placeCourtLines() {
         .attr('stroke-width', 1)
         .attr('fill', 'none');
 
-    svg.append('image')
-        .attr('href', 'img/raptors-logo.png')
-        .attr('width', 300)
-        .attr('height', 300)
-        .attr('x', courtWidth / 2 + x_offset- 150)
-        .attr('y', courtHeight / 2 + y_offset - 150);
-
     // Paint (keys)
     [2, courtWidth - 192].forEach(x => {
         svg.append('rect')
+            .attr('id', 'paint')
             .attr('x', x + x_offset)
             .attr('y', (courtHeight - 160) / 2 + y_offset)
             .attr('width', 190)
             .attr('height', 160)
             .attr('stroke', 'black')
             .attr('stroke-width', 1)
-            .attr('fill', 'crimson');
+            .attr('fill', 'none');
     });
 
     // Free throw circles
@@ -94,28 +92,6 @@ function placeCourtLines() {
             .attr('cy', courtHeight / 2 + y_offset)
             .attr('stroke', 'black')
             .attr('stroke-width', 1)
-            .attr('fill', 'none');
-    });
-
-    // Backboards
-    [40, 900].forEach(x => {
-        svg.append('line')
-            .attr('x1', x + x_offset)
-            .attr('x2', x + x_offset)
-            .attr('y1', (courtHeight / 2 - 30) + y_offset)
-            .attr('y2', (courtHeight / 2 + 30) + y_offset)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 3);
-    });
-
-    // Hoops
-    [47.5, 892.5].forEach(x => {
-        svg.append('circle')
-            .attr('r', 7.5)
-            .attr('cx', x + x_offset)
-            .attr('cy', courtHeight / 2 + y_offset)
-            .attr('stroke', 'orange')
-            .attr('stroke-width', 1.5)
             .attr('fill', 'none');
     });
 
@@ -146,6 +122,46 @@ function placeCourtLines() {
                 .attr('stroke-width', 1);
         });
     });
+};
+
+function additionalTouches(svg){
+    // Backboards
+    [40, 900].forEach(x => {
+        svg.append('line')
+            .attr('x1', x + x_offset)
+            .attr('x2', x + x_offset)
+            .attr('y1', (courtHeight / 2 - 30) + y_offset)
+            .attr('y2', (courtHeight / 2 + 30) + y_offset)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 3);
+    });
+
+    // Hoops
+    [47.5, 892.5].forEach(x => {
+        svg.append('circle')
+            .attr('r', 7.5)
+            .attr('cx', x + x_offset)
+            .attr('cy', courtHeight / 2 + y_offset)
+            .attr('stroke', 'orange')
+            .attr('stroke-width', 1.5)
+            .attr('fill', 'none');
+    });
+
+    svg.append('image')
+        .attr('href', 'img/raptors-logo.png')
+        .attr('width', 300)
+        .attr('height', 300)
+        .attr('x', courtWidth / 2 + x_offset- 150)
+        .attr('y', courtHeight / 2 + y_offset - 150);
+
+    svg.selectAll('rect#svg-border')
+        .attr('fill', 'crimson');
+
+    svg.selectAll('rect#court-bounds')
+        .attr('fill', 'tan');
+
+    svg.selectAll('rect#paint')
+        .attr('fill', 'crimson');
 }
 
 function formatTime(seconds) {
@@ -170,7 +186,7 @@ function renderTooltip(id) {
 
 function updateTooltip(event) {
     const tooltip = document.getElementById('player-tooltip');
-    const offset = 15;
+    const offset = 20;
     tooltip.style.left = `${event.clientX}px`;
     tooltip.style.top = `${event.clientY - tooltip.offsetHeight - offset}px`;
 };
@@ -180,9 +196,10 @@ function showTooltip(visible) {
     tooltip.hidden = !visible;
 };
 
-const distance = (x1, y1, x2, y2) => Math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
+const distance = (x1, y1, x2, y2) => Math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2));
 
-placeCourtLines();
+placeCourtLines(svg);
+additionalTouches(svg);
 
 const clock = d3.select('#game-clock')
 clock.append('div')
@@ -197,8 +214,9 @@ clock.append('div')
 
 const teamBox = {'raptors': raptors, 'hornets': hornets}
 Object.entries(teamBox).forEach((d) => {
-    d3.select(`#${d[0]}-box`)
-        .selectAll('tr.player')
+    const box = d3.select(`#${d[0]}-box`)
+        
+    box.selectAll('tr.player')
         .data(d[1]['players'])
         .enter()
         .append('tr')
@@ -221,6 +239,9 @@ Object.entries(teamBox).forEach((d) => {
         })
         .on('mouseout', () => {
             showTooltip(false);
+        })
+        .on('click', (_, d) => {
+            showPlayerHeatmap(d['playerid']);
         });
 });
 
@@ -244,7 +265,6 @@ moments = moments.filter((d) => {
 
 console.log(moments);
 
-let momentIndex = 0;
 const raptorsId = events[0]['home']['teamid'];
 
 let playerXY = []
@@ -313,6 +333,15 @@ playerIds.forEach((player) => {
 
 let lastGameClock = null;
 
+const offensePositions = {}
+const defensePositions = {}
+playerIds.forEach((player) => {
+    offensePositions[player] = [];
+    defensePositions[player] = [];
+});
+
+let momentIndex = 0;
+
 function animate() {
     if (!isRunning || momentIndex >= moments.length) return;
 
@@ -341,6 +370,42 @@ function animate() {
             playerXY[n]['y'] = moment[5][n + 1][3] * 10;
         });
     };
+
+    playerXY.forEach((p) => {
+        if (p['teamId'] === raptorsId) { // if player is on the raptors
+            if (qtr === 1 || qtr === 2) { // if it is the first half
+                if (p['x'] <= 500) { // if they are on the left side of the court
+                    offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors are on offense
+                }
+                else {
+                    defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors on defense
+                }
+            } else { // if it is second half
+                if (p['x'] >= 500) { // if they are on the right side of the court
+                    offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors are on offense
+                }
+                else {
+                    defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors on defense
+                }
+            }
+        } else { // if player is on the hornets
+            if (qtr === 1 || qtr === 2) { // if it is the first half
+                if (p['x'] >= 500) { // if they are on the right side of the court
+                    offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets are on offense
+                }
+                else {
+                    defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets on defense
+                }
+            } else { // if it is second half
+                if (p['x'] <= 500) { // if they are on the left side of the court
+                    offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets are on offense
+                }
+                else {
+                    defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets on defense
+                }
+            }
+        }
+    });
 
     players.selectAll('rect')
         .data(playerXY)
@@ -399,6 +464,59 @@ function animate() {
     // Schedule the next frame
     setTimeout(animate, 40 / speed);
     console.log('i');
+}
+
+function showHeatmaps(pid) {
+    document.getElementById('position-heatmap').innerHTML = '';
+
+    const oHeatmap = d3.select('#position-heatmap')
+        .append('svg')
+        .attr('id', 'offensive-heatmap')
+        .attr('width', 1000)
+        .attr('height', 550);
+
+    const dHeatmap = d3.select('#position-heatmap')
+        .append('svg')
+        .attr('id', 'defensive-heatmap')
+        .attr('width', 1000)
+        .attr('height', 550);
+
+    const offenseData = d3.contourDensity()
+        .x(d => d['x'])
+        .y(d => d['y'])
+        .size([1000, 500])
+        .bandwidth(10) // smoothing factor
+        (offensePositions[pid]);
+
+    const defenseData = d3.contourDensity()
+        .x(d => d['x'])
+        .y(d => d['y'])
+        .size([1000, 500])
+        .bandwidth(10) // smoothing factor
+        (defensePositions[pid]);
+
+    const maxOffenseValue = d3.max(offenseData, d => d.value);
+    const maxDefenseValue = d3.max(offenseData, d => d.value);
+
+    oHeatmap.selectAll('path')
+        .data(offenseData)
+        .enter()
+        .append('path')
+        .attr('id', 'heat')
+        .attr('d', d3.geoPath())
+        .attr('fill', d => d3.interpolateYlOrRd(d.value / maxOffenseValue))
+        .attr('stroke', 'none')
+        .attr('opacity', 0.8);
+
+    dHeatmap.selectAll('path')
+        .data(defenseData)
+        .enter()
+        .append('path')
+        .attr('id', 'heat')
+        .attr('d', d3.geoPath())
+        .attr('fill', d => d3.interpolateYlOrRd(d.value / maxDefenseValue))
+        .attr('stroke', 'none')
+        .attr('opacity', 0.8);
 }
 
 // Start animation

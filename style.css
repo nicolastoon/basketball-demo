@@ -47,9 +47,23 @@
     visibility: hidden;
 }
 
-#animation {
+#animation, #position-heatmap {
     text-align: center;
     margin: 20px 20px 20px 20px;
+}
+
+rect#tor {
+    height: 10px;
+    width: 10px;
+    fill: white;
+    stroke: 2px solid black;
+}
+
+rect#cha {
+    height: 10px;
+    width: 10px;
+    fill: darkslateblue;
+    stroke: 2px solid black;
 }
 
 #boxes {
@@ -81,8 +95,8 @@
     opacity: 0.4;
 }
 
-tr.player:hover {
-  opacity: 1;
+#raptors-box tr.player:hover, #hornets-box tr.player:hover {
+    opacity: 1;
 }
 
 #raptors-box tr:nth-child(even) {
