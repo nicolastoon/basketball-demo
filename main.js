@@ -6,6 +6,7 @@ async function loadData() {
     return data;
 }
 
+// load data
 const data = await loadData();
 console.log(data);
 const events = data.events;
@@ -30,6 +31,7 @@ const playerMap = [...raptors['players'], ...hornets['players']].reduce((obj, p)
 
 console.log(playerMap);
 
+// function to place court lines
 function placeCourtLines(svg) {
     // add thin border around svg
     svg.append('rect')
@@ -124,6 +126,7 @@ function placeCourtLines(svg) {
     });
 };
 
+// additional details, such as backboards + hoops and color to the court
 function additionalTouches(svg){
     // Backboards
     [40, 900].forEach(x => {
@@ -164,12 +167,14 @@ function additionalTouches(svg){
         .attr('fill', 'crimson');
 }
 
+// function to help format time and minutes played
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+// function to render tooltip when hovering over player entries
 function renderTooltip(id) {
     const opponent = document.getElementById('opponent');
     const timeSeen = document.getElementById('time-seen');
@@ -184,6 +189,7 @@ function renderTooltip(id) {
     }
 }
 
+// function to update tooltip position and content when hovering over different players
 function updateTooltip(event) {
     const tooltip = document.getElementById('player-tooltip');
     const offset = 20;
@@ -191,6 +197,7 @@ function updateTooltip(event) {
     tooltip.style.top = `${event.clientY - tooltip.offsetHeight - offset}px`;
 };
 
+// function to show + hide tooltip when hovering/not hovering
 function showTooltip(visible) {
     const tooltip = document.getElementById('player-tooltip');
     tooltip.hidden = !visible;
@@ -201,6 +208,7 @@ const distance = (x1, y1, x2, y2) => Math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 
 placeCourtLines(svg);
 additionalTouches(svg);
 
+// instantiate game clock at top of page
 const clock = d3.select('#game-clock')
 clock.append('div')
     .attr('id', 'qtr')
@@ -212,6 +220,7 @@ clock.append('div')
     .attr('id', 'shot-clock')
     .text('24')
 
+// instantiate team tables under animation
 const teamBox = {'raptors': raptors, 'hornets': hornets}
 Object.entries(teamBox).forEach((d) => {
     const box = d3.select(`#${d[0]}-box`)
@@ -245,6 +254,7 @@ Object.entries(teamBox).forEach((d) => {
         });
 });
 
+// filter data to only contain moments where game is occurring
 let moments = events.flatMap(d => d.moments);
 moments.sort((a, b) => {
     if (a[0] !== b[0]) {
@@ -267,6 +277,7 @@ console.log(moments);
 
 const raptorsId = events[0]['home']['teamid'];
 
+// instantiating array for player positions on the court 
 let playerXY = []
 let n_players = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 n_players.forEach((n) => {
@@ -279,23 +290,23 @@ const playerGroups = players.selectAll('g')
     .enter()
     .append('g');
 
-// Draw rectangles
+// create player boxes
 playerGroups.append('rect')
     .attr('width', 20)
     .attr('height', 20)
     .attr('stroke', 'black')
     .attr('stroke-width', 1)
     .attr('fill', d => d['teamId'] === raptorsId ? 'white' : 'darkslateblue');
-
 const player_offset = 10;
 
-// Add player ID as text inside rectangle
+// add player number as text inside rectangle
 playerGroups.append('text')
     .attr('text-anchor', 'middle')
     .attr('alignment-baseline', 'middle')
     .attr('color', (d) => {return d['teamId'] === raptorsId ? 'black' : 'white'})
     .attr('font-size', 15);
 
+// create ball on court
 const ball = svg.append('circle')
     .attr('id', 'ball')
     .attr('r', 4)
@@ -303,16 +314,18 @@ const ball = svg.append('circle')
     .attr('stroke-width', 2)
     .attr('fill', 'orange');
 
+// create playback speed slider
 let isRunning = true;
 let speed = 1;
 const speedSlider = document.getElementById('speed-slider');
 const speedLabel = document.getElementById('speed-label');
-
 speedSlider.addEventListener('input', () => {
     speed = parseFloat(speedSlider.value);
     speedLabel.textContent = `${speed}x`;
 });
 
+
+// create pause/play button
 let playing = true;
 const pauseButton = document.getElementById('play-pause-btn')
 pauseButton.addEventListener('click', () => {
@@ -325,14 +338,13 @@ pauseButton.addEventListener('click', () => {
     animate();
 });
 
+// instantiate objects to record player "minutes played" and (x, y) coordinates on the court
 const playerIds = Object.keys(playerMap);
-
 const playerMP = playerIds.reduce((obj, p) => {
     obj[p] = 0;
     return obj;
 }, {});
 const closestOpponent = {}
-
 playerIds.forEach((player) => {
     closestOpponent[player] = {};
 
@@ -342,9 +354,6 @@ playerIds.forEach((player) => {
         }
     });
 });
-
-let lastGameClock = null;
-
 const offensePositions = {}
 const defensePositions = {}
 playerIds.forEach((player) => {
@@ -352,9 +361,12 @@ playerIds.forEach((player) => {
     defensePositions[player] = [];
 });
 
+// instantiate some variables for game animation
 let momentIndex = 0;
 let timeout = null;
+let lastGameClock = null;
 
+// function to animate and update game simulate, frame by frame, as well as record data as simulation is going
 function animate() {
     if (!isRunning || momentIndex >= moments.length) return;
     if (!playing) {
@@ -362,6 +374,7 @@ function animate() {
         return;
     }
 
+    // creating constants
     const moment = moments[momentIndex];
     const qtr = moment[0];
     const gameClock = moment[2];
@@ -372,6 +385,7 @@ function animate() {
 
     let recordTime = ((lastGameClock !== null) && (lastGameClock !== gameClock));
 
+    // recording player team, id and position
     if (moment[5][0][0] !== -1) { // if ball tracking doesn't exist for that moment
         n_players.forEach((n) => {
             playerXY[n]['teamId'] = moment[5][n][0];
@@ -388,6 +402,7 @@ function animate() {
         });
     };
 
+    // record player position on offensive/defensive end
     playerXY.forEach((p) => {
         if (p['teamId'] === raptorsId) { // if player is on the raptors
             if (qtr === 1 || qtr === 2) { // if it is the first half
@@ -420,6 +435,7 @@ function animate() {
         }
     });
 
+    // making players move
     players.selectAll('rect')
         .data(playerXY)
         .transition()
@@ -429,6 +445,7 @@ function animate() {
         .attr('x', (d) => d['x'])
         .attr('y', (d) => d['y']);
 
+    // making the numbers inside players move
     players.selectAll('text')
         .data(playerXY)
         .transition()
@@ -438,16 +455,19 @@ function animate() {
         .attr('y', d => d['y'] - player_offset + y_offset - 3)
         .attr('fill', (d) => {return d['teamId'] === raptorsId ? 'black' : 'white'});
 
+    // making the ball move
     ball.transition()
         .duration(40 / speed)
         .attr('r', ballZ * 0.5 + 2.5)
         .attr('cx', ballX + x_offset)
         .attr('cy', ballY + y_offset);
 
+    // updating the game clock
     d3.select('#qtr').text(`Q${qtr}`);
     d3.select('#game-time').text(formatTime(gameClock));
     d3.select('#shot-clock').text(shotClock);
 
+    // recording which player is closest
     if (recordTime) {
         playerXY.forEach((p) => {
             const pid = p['playerId'];
@@ -471,14 +491,13 @@ function animate() {
         });
     };
 
+    // updating variables for next frame
     momentIndex++;
     lastGameClock = gameClock;
-
-    // Schedule the next frame
     timeout = setTimeout(animate, 40 / speed);
-    console.log('i');
 }
 
+// function to show heatmaps when clicking on a player entry
 function showHeatmaps(pid) {
     const playerName = `${playerMap[pid]['firstname']} ${playerMap[pid]['lastname']}`
     document.getElementById('position-heatmap').innerHTML = 
@@ -545,5 +564,5 @@ function showHeatmaps(pid) {
     dHeatmap.attr('transform', 'rotate(-90)');
 }
 
-// Start animation
+// start animation
 animate();
