@@ -99,6 +99,11 @@ html {
     border: 2px solid black;
 }
 
+#direction {
+    text-align: center;
+    margin: auto;
+}
+
 #boxes {
     display: flex;
     flex-direction: row;
@@ -131,6 +136,7 @@ html {
 
 #raptors-box tr.player:hover, #hornets-box tr.player:hover {
     opacity: 1;
+    cursor: pointer;
 }
 
 #raptors-box tr:nth-child(even) {
