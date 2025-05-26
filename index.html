@@ -8,8 +8,6 @@
     <script type="module" src="main.js"></script>
 </head>
 <body>
-    <h1>I hope the project is going well!</h1>
-
     <div id="game-clock"></div>
 
     <div id="playback-speed">
@@ -17,12 +15,20 @@
         <label for="speed-slider">Speed: <span id="speed-label">1x</span></label>
     </div>
 
+    <div id="play-button">
+        <button id="play-pause-btn">⏸ Pause</button>
+    </div>
+
     <div id="animation"></div>
 
-    <div class="legend">
-        <h3><rect id="tor"></rect> Toronto Raptors</h3>
-        <h3><rect id="cha"></rect> Charlotte Hornets</h3>
-    </div>
+    <ul class="legend">
+        <li>
+            <span class="swatch" id="tor"></span> <div>Toronto Raptors</div>
+        </li>
+        <li>
+            <span class="swatch" id="cha"></span> <div>Charlotte Hornets</div>
+        </li>
+    </ul>
 
     <div id="boxes">
         <table id="raptors-box">

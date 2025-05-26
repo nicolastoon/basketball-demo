@@ -1,3 +1,7 @@
+html {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+}
+
 #game-clock {
     display: flex;
     width: 250px;
@@ -32,6 +36,17 @@
     width: 400px;
 }
 
+#play-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#play-pause-btn {
+    width: 80px;
+    height: 30px;
+}
+
 #player-tooltip {
     position: fixed;
     transition-property: opacity, visibility;
@@ -52,25 +67,44 @@
     margin: 20px 20px 20px 20px;
 }
 
-rect#tor {
-    height: 10px;
-    width: 10px;
-    fill: white;
-    stroke: 2px solid black;
+.legend {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    list-style-type: none;
+    gap: 100px;
 }
 
-rect#cha {
-    height: 10px;
-    width: 10px;
-    fill: darkslateblue;
-    stroke: 2px solid black;
+.legend li {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+}
+
+.swatch#tor {
+    display: inline-flex;
+    width: 20px;
+    aspect-ratio: 1 / 1;
+    background-color: white;
+    border: 2px solid black;
+}
+
+.swatch#cha {
+    display: inline-flex;
+    width: 20px;
+    aspect-ratio: 1 / 1;
+    background-color: darkslateblue;
+    border: 2px solid black;
 }
 
 #boxes {
     display: flex;
     flex-direction: row;
-    justify-content: space-evenly;
+    justify-content: center;
     align-items: center;
+    gap: 40px;
 }
 
 #raptors-box, #hornets-box {
@@ -104,9 +138,22 @@ rect#cha {
 }
 
 #hornets-box tr:nth-child(even) {
-    background-color: #cbebeb79;
+    background-color: rgb(212, 205, 252);
 }
 
 #raptors-box td, #hornets-box td {
     padding: 8px;
+}
+
+#position-heatmap {
+    display: grid;
+    grid-template-rows: auto 1em auto;
+    grid-template-columns: auto auto;
+    column-gap: 200px;
+    justify-content: center;
+    align-items: center;
+}
+
+#heatmap-title {
+    grid-column: 1 / -1;
 }

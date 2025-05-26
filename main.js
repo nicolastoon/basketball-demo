@@ -241,7 +241,7 @@ Object.entries(teamBox).forEach((d) => {
             showTooltip(false);
         })
         .on('click', (_, d) => {
-            showPlayerHeatmap(d['playerid']);
+            showHeatmaps(d['playerid']);
         });
 });
 
@@ -313,6 +313,18 @@ speedSlider.addEventListener('input', () => {
     speedLabel.textContent = `${speed}x`;
 });
 
+let playing = true;
+const pauseButton = document.getElementById('play-pause-btn')
+pauseButton.addEventListener('click', () => {
+    playing = !playing;
+    if (playing) { 
+        pauseButton.innerText = '⏸ Pause';
+    } else {
+        pauseButton.innerText = '▶ Play';
+    }
+    animate();
+});
+
 const playerIds = Object.keys(playerMap);
 
 const playerMP = playerIds.reduce((obj, p) => {
@@ -341,9 +353,14 @@ playerIds.forEach((player) => {
 });
 
 let momentIndex = 0;
+let timeout = null;
 
 function animate() {
     if (!isRunning || momentIndex >= moments.length) return;
+    if (!playing) {
+        clearTimeout(timeout);
+        return;
+    }
 
     const moment = moments[momentIndex];
     const qtr = moment[0];
@@ -376,32 +393,28 @@ function animate() {
             if (qtr === 1 || qtr === 2) { // if it is the first half
                 if (p['x'] <= 500) { // if they are on the left side of the court
                     offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors are on offense
-                }
-                else {
-                    defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors on defense
+                } else {
+                    defensePositions[p['playerId']].push({x: -Math.abs(p['x'] - 500) + 500, y: p['y']}); // raptors on defense
                 }
             } else { // if it is second half
                 if (p['x'] >= 500) { // if they are on the right side of the court
-                    offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors are on offense
-                }
-                else {
+                    offensePositions[p['playerId']].push({x: -Math.abs(p['x'] - 500) + 500, y: p['y']}); // raptors are on offense
+                } else {
                     defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // raptors on defense
                 }
             }
         } else { // if player is on the hornets
             if (qtr === 1 || qtr === 2) { // if it is the first half
                 if (p['x'] >= 500) { // if they are on the right side of the court
-                    offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets are on offense
-                }
-                else {
+                    offensePositions[p['playerId']].push({x: -Math.abs(p['x'] - 500) + 500, y: p['y']}); // hornets are on offense
+                } else {
                     defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets on defense
                 }
             } else { // if it is second half
                 if (p['x'] <= 500) { // if they are on the left side of the court
                     offensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets are on offense
-                }
-                else {
-                    defensePositions[p['playerId']].push({x: p['x'], y: p['y']}); // hornets on defense
+                } else {
+                    defensePositions[p['playerId']].push({x: -Math.abs(p['x'] - 500) + 500, y: p['y']}); // hornets on defense
                 }
             }
         }
@@ -462,23 +475,31 @@ function animate() {
     lastGameClock = gameClock;
 
     // Schedule the next frame
-    setTimeout(animate, 40 / speed);
+    timeout = setTimeout(animate, 40 / speed);
     console.log('i');
 }
 
 function showHeatmaps(pid) {
-    document.getElementById('position-heatmap').innerHTML = '';
+    const playerName = `${playerMap[pid]['firstname']} ${playerMap[pid]['lastname']}`
+    document.getElementById('position-heatmap').innerHTML = 
+        `<h3 id="heatmap-title">Where has ${playerName} been on the court?</h3>
+        <div id="offense-header">
+            <desc>${playerName} on offense</desc>
+        </div>
+        <div id="defense-header">
+            <desc>${playerName} on defense</desc>
+        </div>`;
 
     const oHeatmap = d3.select('#position-heatmap')
         .append('svg')
         .attr('id', 'offensive-heatmap')
-        .attr('width', 1000)
+        .attr('width', 500)
         .attr('height', 550);
 
     const dHeatmap = d3.select('#position-heatmap')
         .append('svg')
         .attr('id', 'defensive-heatmap')
-        .attr('width', 1000)
+        .attr('width', 500)
         .attr('height', 550);
 
     const offenseData = d3.contourDensity()
@@ -517,6 +538,11 @@ function showHeatmaps(pid) {
         .attr('fill', d => d3.interpolateYlOrRd(d.value / maxDefenseValue))
         .attr('stroke', 'none')
         .attr('opacity', 0.8);
+
+    placeCourtLines(oHeatmap);
+    placeCourtLines(dHeatmap);
+    oHeatmap.attr('transform', 'rotate(-90)');
+    dHeatmap.attr('transform', 'rotate(-90)');
 }
 
 // Start animation
